@@ -2,22 +2,70 @@ import React, { useState } from "react";
 import TagInput from "../../components/Input/TagInput";
 import { MdClose } from "react-icons/md";
 
-const AddEditNotes = ({ noteData, type, onClose }) => {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [tags, setTags] = useState([]);
+const AddEditNotes = ({
+  noteData,
+  type,
+  getAllNotes,
+  onClose,
+  showToastMessage,
+}) => {
+  const [title, setTitle] = useState(noteData?.title || "");
+  const [content, setContent] = useState(noteData?.content || "");
+  const [tags, setTags] = useState(noteData?.tags || []);
 
   const [error, setError] = useState(null);
 
   // Add Note
   const addNewNote = async () => {
-
-  }
-
-    // Edit Note
-    const editNote = async () => {
-    
+    try {
+      const response = await fetch("http://localhost:8000/add-note", {
+        method: "POST",
+        body: JSON.stringify({
+          title,
+          content,
+          tags,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (response.ok) {
+        showToastMessage("Note Added Successfully")
+        getAllNotes();
+        onClose();
+      }
+    } catch (error) {
+      setError(error.message);
     }
+  };
+
+  // Edit Note
+  const editNote = async () => {
+    const noteId = noteData._id;
+    try {
+      const response = await fetch(
+        "http://localhost:8000/edit-note/" + noteId,
+        {
+          method: "PUT",
+          body: JSON.stringify({
+            title,
+            content,
+            tags,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (response.ok) {
+        showToastMessage("Note Updated Successfully")
+        getAllNotes();
+        onClose();
+      }
+    } catch (error) {
+      setError(error.message);
+    }
+  };
 
   const handleAddNote = () => {
     if (!title) {
@@ -37,6 +85,7 @@ const AddEditNotes = ({ noteData, type, onClose }) => {
       addNewNote();
     }
   };
+
   return (
     <div className="relative">
       <button
@@ -78,7 +127,7 @@ const AddEditNotes = ({ noteData, type, onClose }) => {
         className="btn-primary font-medium mt-5 p-3"
         onClick={handleAddNote}
       >
-        ADD
+        {type === "edit" ? "UPDATE" : "ADD"}
       </button>
     </div>
   );
